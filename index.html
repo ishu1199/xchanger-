@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Currency Converter</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            background-image: url('money_exchange_background.png'); /* Ensure this image is in the same folder as the HTML file */
+            background-size: cover;
+            background-position: center center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-color: #f0f0f0; /* Fallback color */
+        }
+        .converter-container {
+            background-color: rgba(255, 255, 255, 0.93);
+            padding: 30px;
+            padding-top: 50px; /* Space for the kebab menu */
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 420px;
+            position: relative; /* Needed for absolute positioning of kebab menu */
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+        }
+        /* Kebab Menu (3-dots) Styles */
+        .kebab-menu-container {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+        }
+        .kebab-menu-icon {
+            font-size: 28px;
+            cursor: pointer;
+            padding: 5px;
+            color: #555;
+            line-height: 1;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        .kebab-menu-icon:hover {
+            background-color: #e0e0e0;
+        }
+        .kebab-dropdown {
+            display: none;
+            position: absolute;
+            top: 40px;
+            right: 0;
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 100;
+            min-width: 180px;
+        }
+        .kebab-dropdown a {
+            display: block;
+            padding: 12px 18px;
+            text-decoration: none;
+            color: #333;
+            font-size: 15px;
+            white-space: nowrap;
+        }
+        .kebab-dropdown a:hover {
+            background-color: #f5f5f5;
+        }
+        .kebab-dropdown a:first-child {
+            border-top-left-radius: 6px;
+            border-top-right-radius: 6px;
+        }
+        .kebab-dropdown a:last-child {
+            border-bottom-left-radius: 6px;
+            border-bottom-right-radius: 6px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+            margin-bottom: 25px;
+            font-size: 26px;
+        }
+        .input-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 7px;
+            color: #333;
+            font-weight: 600;
+        }
+        input[type="number"], select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bbb;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 15px;
+            background-color: #fdfdfd;
+        }
+        input[type="number"]:focus, select:focus {
+            outline: none;
+            border-color: #5552bd;
+            box-shadow: 0 0 0 0.2rem rgba(85, 82, 189, 0.25);
+        }
+        #convertBtn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #5761D6 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 17px;
+            font-weight: bold;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 15px;
+        }
+        #convertBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+        }
+        #convertBtn:active {
+            transform: translateY(0px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        .result {
+            margin-top: 20px;
+            padding: 16px;
+            background-color: #e9eff5;
+            border-radius: 6px;
+            text-align: center;
+            font-size: 18px;
+            color: #2c3e50;
+            min-height: 30px;
+            border-left: 5px solid #5552bd;
+        }
+        .result .error {
+            color: #d9534f;
+            font-weight: bold;
+            border-left-color: #d9534f;
+        }
+        .loading {
+            text-align: center;
+            font-style: italic;
+            color: #444;
+            margin-top: 15px;
+        }
+        .app-link-display {
+            margin-top: 20px;
+            text-align: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+            border-radius: 6px;
+        }
+        .app-link-display p {
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+        .app-link-display input[type="text"] {
+            width: calc(100% - 80px);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+            background-color: #fff;
+            cursor: text;
+            margin-right: 5px;
+            box-sizing: border-box;
+        }
+        .app-link-display button {
+            width: auto;
+            padding: 8px 12px;
+            font-size: 0.9em;
+            margin-left: 0;
+            margin-bottom: 0;
+            background: #6c757d;
+            color: white;
+            border:none;
+            border-radius:4px;
+            cursor:pointer;
+        }
+        .share-info {
+            font-size: 0.8em;
+            color: #555;
+            text-align: center;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="converter-container">
+        <div class="kebab-menu-container">
+            <div id="kebabIcon" class="kebab-menu-icon" title="More options">⋮</div>
+            <div id="kebabDropdown" class="kebab-dropdown">
+                <a href="#" id="dropdownShareApp">Share App Link</a>
+                <a href="#" id="dropdownReferFriend">Refer to a Friend</a>
+            </div>
+        </div>
+        <h1>Real-Time Currency Converter</h1>
+        <div class="input-group">
+            <label for="amount">Amount:</label>
+            <input type="number" id="amount" placeholder="Enter amount" value="1">
+        </div>
+        <div class="input-group">
+            <label for="fromCurrency">From Currency:</label>
+            <select id="fromCurrency">
+            </select>
+        </div>
+        <button id="convertBtn">Convert to INR</button>
+        
+        <div id="result" class="result">
+        </div>
+        <div id="loading" class="loading" style="display: none;">Fetching latest rates...</div>
+        
+        <div id="appLinkDisplay" class="app-link-display" style="display: none;">
+            <p>App Link:</p>
+            <input type="text" id="appLinkInput" readonly>
+            <button id="copyLinkBtnManual">Copy</button>
+        </div>
+        <div class="share-info">
+            Note: Sharing works best if this app is hosted online.
+        </div>
+    </div>
+    <script>
+        const apiKey = "044050e9ac90a72194b429ca"; // Your API Key
+        const fromCurrencySelect = document.getElementById('fromCurrency');
+        const amountInput = document.getElementById('amount');
+        const convertBtn = document.getElementById('convertBtn');
+        const resultDiv = document.getElementById('result');
+        const loadingDiv = document.getElementById('loading');
+        
+        const kebabIcon = document.getElementById('kebabIcon');
+        const kebabDropdown = document.getElementById('kebabDropdown');
+        const dropdownShareApp = document.getElementById('dropdownShareApp');
+        const dropdownReferFriend = document.getElementById('dropdownReferFriend');
+        const appURL = window.location.href;
+        const appTitle = document.title;
+        const referralText = `Hey! I found this awesome currency converter. You should try it out: ${appURL}`;
+        const appLinkDisplayDiv = document.getElementById('appLinkDisplay');
+        const appLinkInput = document.getElementById('appLinkInput');
+        const copyLinkBtnManual = document.getElementById('copyLinkBtnManual');
+        if (!appURL.startsWith('file:')) {
+            appLinkInput.value = appURL;
+            appLinkDisplayDiv.style.display = 'block';
+        }
+        if(copyLinkBtnManual) {
+            copyLinkBtnManual.addEventListener('click', () => {
+                appLinkInput.select();
+                appLinkInput.setSelectionRange(0, 99999);
+                try {
+                    document.execCommand('copy');
+                    alert('Link copied to clipboard!');
+                } catch (err) {
+                    alert('Failed to copy. Please copy the link manually.');
+                }
+            });
+        }
+        
+        kebabIcon.addEventListener('click', (event) => {
+            event.stopPropagation();
+            kebabDropdown.style.display = kebabDropdown.style.display === 'block' ? 'none' : 'block';
+        });
+        document.addEventListener('click', (event) => {
+            if (kebabDropdown.style.display === 'block' && !kebabIcon.contains(event.target) && !kebabDropdown.contains(event.target)) {
+                kebabDropdown.style.display = 'none';
+            }
+        });
+        function performShare(textToShare, urlToShare) {
+            if (navigator.share) {
+                navigator.share({
+                    title: appTitle,
+                    text: textToShare,
+                    url: urlToShare,
+                })
+                .catch((error) => console.log('Error sharing:', error));
+            } else {
+                if (appURL.startsWith('file:')) {
+                    alert("To share this app, please host it online first. The current 'file://' link won't work for others. You can copy the following message/link manually:\n\n" + (textToShare || urlToShare));
+                } else {
+                    copyToClipboardFallback(textToShare || urlToShare);
+                }
+            }
+            kebabDropdown.style.display = 'none';
+        }
+        function copyToClipboardFallback(text) {
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            try {
+                document.execCommand('copy');
+                alert('Content copied to clipboard!');
+            } catch (err) {
+                alert('Failed to copy. Please copy manually: ' + text);
+            }
+            document.body.removeChild(textArea);
+        }
+        dropdownShareApp.addEventListener('click', (e) => {
+            e.preventDefault();
+            performShare('Check out this awesome currency converter!', appURL);
+        });
+        dropdownReferFriend.addEventListener('click', (e) => {
+            e.preventDefault();
+            performShare(referralText, appURL);
+        });
+        const currencies = {
+            "USD": "US Dollar", "EUR": "Euro", "GBP": "British Pound", "JPY": "Japanese Yen",
+            "AUD": "Australian Dollar", "CAD": "Canadian Dollar", "CHF": "Swiss Franc", "CNY": "Chinese Yuan",
+            "SEK": "Swedish Krona", "NZD": "New Zealand Dollar", "MXN": "Mexican Peso", "SGD": "Singapore Dollar",
+            "HKD": "Hong Kong Dollar", "NOK": "Norwegian Krone", "KRW": "South Korean Won", "TRY": "Turkish Lira",
+            "RUB": "Russian Ruble", "BRL": "Brazilian Real", "ZAR": "South African Rand", "AED": "UAE Dirham",
+            "SAR": "Saudi Riyal", "QAR": "Qatari Riyal", "OMR": "Omani Rial", "KWD": "Kuwaiti Dinar",
+            "BHD": "Bahraini Dinar", "MYR": "Malaysian Ringgit", "THB": "Thai Baht", "IDR": "Indonesian Rupiah",
+            "PHP": "Philippine Peso", "VND": "Vietnamese Dong", "AFN": "Afghan Afghani", "ALL": "Albanian Lek",
+            "DZD": "Algerian Dinar", "AOA": "Angolan Kwanza", "ARS": "Argentine Peso", "AMD": "Armenian Dram",
+            "AWG": "Aruban Florin", "AZN": "Azerbaijani Manat", "BSD": "Bahamian Dollar", "BDT": "Bangladeshi Taka",
+            "BBD": "Barbadian Dollar", "BYN": "Belarusian Ruble", "BZD": "Belize Dollar", "BMD": "Bermudan Dollar",
+            "BTN": "Bhutanese Ngultrum", "BOB": "Bolivian Boliviano", "BAM": "Bosnia-Herzegovina Convertible Mark",
+            "BWP": "Botswanan Pula", "BND": "Brunei Dollar", "BGN": "Bulgarian Lev", "BIF": "Burundian Franc",
+            "KHR": "Cambodian Riel", "CVE": "Cape Verdean Escudo", "KYD": "Cayman Islands Dollar",
+            "XAF": "Central African CFA Franc", "XPF": "CFP Franc", "CLP": "Chilean Peso", "COP": "Colombian Peso",
+            "KMF": "Comorian Franc", "CDF": "Congolese Franc", "CRC": "Costa Rican Colón", "HRK": "Croatian Kuna",
+            "CUP": "Cuban Peso", "CZK": "Czech Koruna", "DKK": "Danish Krone", "DJF": "Djiboutian Franc",
+            "DOP": "Dominican Peso", "EGP": "Egyptian Pound", "ERN": "Eritrean Nakfa", "ETB": "Ethiopian Birr",
+            "FKP": "Falkland Islands Pound", "FJD": "Fijian Dollar", "GMD": "Gambian Dalasi", "GEL": "Georgian Lari",
+            "GHS": "Ghanaian Cedi", "GIP": "Gibraltar Pound", "GTQ": "Guatemalan Quetzal", "GNF": "Guinean Franc",
+            "GYD": "Guyanaese Dollar", "HTG": "Haitian Gourde", "HNL": "Honduran Lempira", "HUF": "Hungarian Forint",
+            "ISK": "Icelandic Króna", "IRR": "Iranian Rial", "IQD": "Iraqi Dinar", "ILS": "Israeli New Shekel",
+            "JMD": "Jamaican Dollar", "JOD": "Jordanian Dinar", "KZT": "Kazakhstani Tenge", "KES": "Kenyan Shilling",
+            "KGS": "Kyrgystani Som", "LAK": "Laotian Kip", "LBP": "Lebanese Pound", "LSL": "Lesotho Loti",
+            "LRD": "Liberian Dollar", "LYD": "Libyan Dinar", "MOP": "Macanese Pataca", "MKD": "Macedonian Denar",
+            "MGA": "Malagasy Ariary", "MWK": "Malawian Kwacha", "MVR": "Maldivian Rufiyaa", "MRU": "Mauritanian Ouguiya",
+            "MUR": "Mauritian Rupee", "MDL": "Moldovan Leu", "MNT": "Mongolian Tugrik", "MAD": "Moroccan Dirham",
+            "MZN": "Mozambican Metical", "MMK": "Myanmar Kyat", "NAD": "Namibian Dollar", "NPR": "Nepalese Rupee",
+            "ANG": "Netherlands Antillean Guilder", "NIO": "Nicaraguan Córdoba", "NGN": "Nigerian Naira",
+            "PKR": "Pakistani Rupee", "PAB": "Panamanian Balboa", "PGK": "Papua New Guinean Kina",
+            "PYG": "Paraguayan Guarani", "PEN": "Peruvian Sol", "PLN": "Polish Zloty", "RON": "Romanian Leu",
+            "RWF": "Rwandan Franc", "SHP": "Saint Helena Pound", "SVC": "Salvadoran Colón", "WST": "Samoan Tala",
+            "STN": "São Tomé and Príncipe Dobra", "RSD": "Serbian Dinar", "SCR": "Seychellois Rupee",
+            "SLL": "Sierra Leonean Leone", "SBD": "Solomon Islands Dollar", "SOS": "Somali Shilling",
+            "SSP": "South Sudanese Pound", "LKR": "Sri Lankan Rupee", "SDG": "Sudanese Pound",
+            "SRD": "Surinamese Dollar", "SZL": "Swazi Lilangeni", "SYP": "Syrian Pound", "TWD": "New Taiwan Dollar",
+            "TJS": "Tajikistani Somoni", "TZS": "Tanzanian Shilling", "TOP": "Tongan Paʻanga",
+            "TTD": "Trinidad and Tobago Dollar", "TND": "Tunisian Dinar", "TMT": "Turkmenistani Manat",
+            "UGX": "Ugandan Shilling", "UAH": "Ukrainian Hryvnia", "UYU": "Uruguayan Peso",
+            "UZS": "Uzbekistan Som", "VUV": "Vanuatu Vatu", "VES": "Venezuelan Bolívar Soberano",
+            "YER": "Yemeni Rial", "ZMW": "Zambian Kwacha"};
+        function populateCurrencies() { 
+            for (const code in currencies) {
+                if (code === "INR") continue;
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = `${code} - ${currencies[code]}`;
+                fromCurrencySelect.appendChild(option);
+            }
+            if (currencies["USD"]) {
+                fromCurrencySelect.value = "USD";
+            }
+        }
+        async function convertCurrency() {
+            const amount = parseFloat(amountInput.value);
+            const fromCurrency = fromCurrencySelect.value;
+            const toCurrency = "INR";
+            resultDiv.innerHTML = "";
+            loadingDiv.style.display = "block";
+            if (isNaN(amount) || amount <= 0) {
+                resultDiv.innerHTML = `<span class="error">Please enter a valid positive amount.</span>`;
+                loadingDiv.style.display = "none";
+                return;
+            }
+            if (!fromCurrency) {
+                resultDiv.innerHTML = `<span class="error">Please select a 'From' currency.</span>`;
+                loadingDiv.style.display = "none";
+                return;
+            }
+            
+            const apiUrl = `https://v6.exchangerate-api.com/v6/${apiKey}/latest/${fromCurrency}`;
+            try {
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({})); 
+                    let errorMessage = `API Error: ${response.status}`;
+                    if (errorData && errorData['error-type']) {
+                        errorMessage += ` - ${errorData['error-type']}`;
+                        if (errorData['error-type'] === "invalid-key" || errorData['error-type'] === "inactive-account" || errorData['error-type'] === "quota-reached") {
+                             errorMessage = `API Key Error: ${errorData['error-type']}. Please check your API key at exchangerate-api.com.`;
+                        }
+                    } else if (response.statusText) {
+                        errorMessage += ` - ${response.statusText}`;
+                    }
+                    throw new Error(errorMessage);
+                }
+                const data = await response.json();
+                if (data.result === "success") {
+                    const rate = data.conversion_rates[toCurrency];
+                    if (rate) {
+                        const convertedAmount = (amount * rate).toFixed(2);
+                        resultDiv.innerHTML = `${amount.toLocaleString()} ${fromCurrency} = <strong>${parseFloat(convertedAmount).toLocaleString()} ${toCurrency}</strong>`;
+                    } else {
+                        resultDiv.innerHTML = `<span class="error">Rate for ${toCurrency} not found in API response from ${fromCurrency}.</span>`;
+                    }
+                } else if (data['error-type']) {
+                     resultDiv.innerHTML = `<span class="error">API Error: ${data['error-type']}</span>`;
+                } else {
+                    resultDiv.innerHTML = `<span class="error">Could not fetch exchange rates. Unexpected API response.</span>`;
+                }
+            } catch (error) {
+                console.error("Conversion Error:", error);
+                resultDiv.innerHTML = `<span class="error">Failed to fetch rates. ${error.message}. Check console for details.</span>`;
+            } finally {
+                loadingDiv.style.display = "none";
+            }
+        }
+        convertBtn.addEventListener('click', convertCurrency);
+        populateCurrencies();
+    </script>
+</body>
+</html>
